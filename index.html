@@ -1023,22 +1023,45 @@
                 }
             }
 
-            function updateTimeSlots(dateStr) {
-                const timeSelect = document.getElementById('time');
-                timeSelect.innerHTML = '<option value="">-- Выберите время --</option>';
+function updateTimeSlots(dateStr) {
+    const timeSelect = document.getElementById('time');
+    timeSelect.innerHTML = '<option value="">-- Выберите время --</option>';
 
-                const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
-                const dateObj = availableDates.find(d => d.date === dateStr);
+    const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+    const dateObj = availableDates.find(d => d.date === dateStr);
 
-                if (dateObj && dateObj.times) {
-                    dateObj.times.forEach(time => {
-                        const option = document.createElement('option');
-                        option.value = time;
-                        option.textContent = time;
-                        timeSelect.appendChild(option);
-                    });
-                }
+    if (dateObj && dateObj.times) {
+        const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => parseInt(cb.dataset.duration));
+        const totalDuration = selectedServices.reduce((sum, duration) => sum + duration, 0);
+
+        dateObj.times.forEach(time => {
+            const selectedTime = new Date(`${dateStr}T${time}`);
+            const endTime = new Date(selectedTime.getTime() + totalDuration * 60000);
+            const isOverlapping = bookings.some(booking => {
+                if (booking.date !== dateStr) return false;
+                const bookingStart = new Date(`${booking.date}T${booking.time}`);
+                const bookingDuration = booking.services.reduce((total, service) => {
+                    const serviceData = servicesData.find(s => s.name === service);
+                    return total + (serviceData ? serviceData.duration : 0);
+                }, 0);
+                const bookingEnd = new Date(bookingStart.getTime() + bookingDuration * 60000);
+                return (selectedTime < bookingEnd && endTime > bookingStart);
+            });
+
+            if (!isOverlapping) {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                timeSelect.appendChild(option);
             }
+        });
+
+        if (timeSelect.options.length === 1) {
+            showError('На выбранную дату нет свободного времени для выбранных услуг');
+        }
+    }
+}
 
             function getMonthName(monthNum) {
                 const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -1046,23 +1069,24 @@
             }
 
             // Проверка пересечения времени
-            function checkTimeOverlap(date, time, duration) {
-                const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
-                const selectedTime = new Date(`${date}T${time}`);
-                const endTime = new Date(selectedTime.getTime() + duration * 60000);
+// Проверка пересечения времени
+function checkTimeOverlap(date, time, duration) {
+    const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+    const selectedTime = new Date(`${date}T${time}`);
+    const endTime = new Date(selectedTime.getTime() + duration * 60000);
 
-                return bookings.some(booking => {
-                    if (booking.date !== date) return false;
-                    const bookingStart = new Date(`${booking.date}T${booking.time}`);
-                    const bookingDuration = booking.services.reduce((total, service) => {
-                        const serviceData = servicesData.find(s => s.name === service);
-                        return total + (serviceData ? serviceData.duration : 0);
-                    }, 0);
-                    const bookingEnd = new Date(bookingStart.getTime() + bookingDuration * 60000);
+    return bookings.some(booking => {
+        if (booking.date !== date) return false;
+        const bookingStart = new Date(`${booking.date}T${booking.time}`);
+        const bookingDuration = booking.services.reduce((total, service) => {
+            const serviceData = servicesData.find(s => s.name === service);
+            return total + (serviceData ? serviceData.duration : 0);
+        }, 0);
+        const bookingEnd = new Date(bookingStart.getTime() + bookingDuration * 60000);
 
-                    return (selectedTime < bookingEnd && endTime > bookingStart);
-                });
-            }
+        return (selectedTime < bookingEnd && endTime > bookingStart);
+    });
+}
 
             // Форматирование даты для отображения
             function formatDateForDisplay(dateStr) {

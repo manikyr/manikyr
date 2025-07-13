@@ -703,6 +703,7 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                 </div>
                 <div class="flex flex-col items-end">
                     <span class="text-xs text-gray-500">${date}</span>
+                    <span class="text-xs text-gray-500 mt-1">ID: ${booking.id}</span>
                     <select class="status-select mt-3 px-3 py-1 rounded-lg text-sm font-medium" data-id="${booking.id}">
                         <option value="Новая" ${booking.status === 'Новая' ? 'selected' : ''}>Новая</option>
                         <option value="Подтверждена" ${booking.status === 'Подтверждена' ? 'selected' : ''}>Подтверждена</option>
@@ -721,6 +722,26 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
         bookingsList.appendChild(bookingDiv);
     });
 
+    // Уведомление о новых записях
+    const newBookings = bookings.filter(b => b.status === 'Новая').length;
+    if (newBookings > 0 && order === 'new') {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = 'bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4';
+        notificationDiv.innerHTML = `
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <span class="font-semibold">Новые записи!</span> У вас ${newBookings} новых записей.
+                    </p>
+                </div>
+            </div>
+        `;
+        bookingsList.insertBefore(notificationDiv, bookingsList.firstChild);
+    }
+
     // Обработчики изменения статуса
     document.querySelectorAll('.status-select').forEach(select => {
         select.addEventListener('change', function() {
@@ -730,7 +751,6 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
             if (booking) {
                 booking.status = this.value;
                 localStorage.setItem('bookings', JSON.stringify(bookings));
-                // Добавляем уведомление для клиента
                 const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
                 const message = `Ваша запись на ${booking.date.split('-').reverse().join('.')} в ${booking.time} ${this.value === 'Подтверждена' ? 'подтверждена' : this.value === 'Отменена' ? 'отменена' : 'завершена'}.`;
                 notifications.push({
@@ -741,6 +761,7 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                 });
                 localStorage.setItem('notifications', JSON.stringify(notifications));
                 loadAdminStats();
+                loadAdminBookings(order, searchQuery);
             }
         });
     });
@@ -754,7 +775,6 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                 const booking = bookings.find(b => b.id === bookingId);
                 const updatedBookings = bookings.filter(b => b.id !== bookingId);
                 localStorage.setItem('bookings', JSON.stringify(updatedBookings));
-                // Добавляем уведомление об удалении
                 if (booking) {
                     const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
                     notifications.push({
@@ -765,7 +785,7 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                     });
                     localStorage.setItem('notifications', JSON.stringify(notifications));
                 }
-                loadAdminBookings(document.getElementById('filter-new').classList.contains('gradient-bg') ? 'new' : 'old');
+                loadAdminBookings(order, searchQuery);
                 loadAdminStats();
             }
         });
@@ -778,13 +798,11 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
             const bookings = JSON.parse(localStorage.getItem('bookings'));
             const booking = bookings.find(b => b.id === bookingId);
             if (booking) {
-                // Заполняем модальное окно
                 document.getElementById('update-booking-id').value = booking.id;
                 document.getElementById('update-name').value = booking.name;
                 document.getElementById('update-phone').value = booking.phone;
                 document.getElementById('update-notes').value = booking.notes || '';
 
-                // Заполняем выпадающий список дат
                 const dateSelect = document.getElementById('update-date');
                 dateSelect.innerHTML = '';
                 const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
@@ -798,7 +816,6 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                     dateSelect.appendChild(option);
                 });
 
-                // Заполняем выпадающий список времени
                 const timeSelect = document.getElementById('update-time');
                 const updateTimes = () => {
                     timeSelect.innerHTML = '';
@@ -819,7 +836,6 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                 updateTimes();
                 dateSelect.addEventListener('change', updateTimes);
 
-                // Заполняем чекбоксы услуг
                 const servicesContainer = document.getElementById('update-services');
                 servicesContainer.innerHTML = '';
                 servicesData.forEach(service => {
@@ -832,7 +848,6 @@ function loadAdminBookings(order = 'new', searchQuery = '') {
                     servicesContainer.appendChild(div);
                 });
 
-                // Показываем модальное окно
                 document.getElementById('update-booking-modal').style.display = 'flex';
             }
         });
