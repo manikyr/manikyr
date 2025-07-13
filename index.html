@@ -710,31 +710,18 @@
                     </div>
                 </div>
 
-                <!-- Список услуг -->
+                <!-- Ваши уведомления -->
                 <div class="bg-white rounded-xl shadow-xl p-6 neumorphic scroll-reveal">
                     <div class="flex items-center mb-6">
                         <div class="bg-primary-100 p-3 rounded-full mr-4">
-                            <i class="fas fa-spa text-primary-700 text-xl"></i>
+                            <i class="fas fa-bell text-primary-700 text-xl"></i>
                         </div>
-                        <h2 class="text-2xl font-bold text-primary-800">Наши услуги</h2>
+                        <h2 class="text-2xl font-bold text-primary-800">Ваши уведомления</h2>
                     </div>
-                    <div id="services-list" class="space-y-4"></div>
-                </div>
-            </div>
-
-            <!-- Раздел "Ваши уведомления" -->
-            <section id="your-notifications" class="mt-16 scroll-reveal">
-                <div class="flex items-center mb-8">
-                    <div class="bg-primary-100 p-3 rounded-full mr-4">
-                        <i class="fas fa-bell text-primary-700 text-xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-primary-800">Ваши уведомления</h2>
-                </div>
-                
-                <div class="bg-white rounded-xl shadow-xl p-6 neumorphic">
+                    
                     <div class="mb-6">
                         <label for="notification-phone" class="block text-primary-700 mb-2 font-medium">Введите ваш номер телефона</label>
-                        <div class="relative max-w-md">
+                        <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-phone-alt text-primary-400"></i>
                             </div>
@@ -752,7 +739,7 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
             <!-- Раздел "О нас" -->
             <section id="about" class="mt-16 scroll-reveal">
@@ -900,29 +887,12 @@
 
             // Генерация списка услуг
             function populateServices(category = 'all') {
-                const servicesList = document.getElementById('services-list');
                 const servicesContainer = document.getElementById('services-container');
-                servicesList.innerHTML = '';
                 servicesContainer.innerHTML = '';
 
                 const filteredServices = category === 'all' ? servicesData : servicesData.filter(s => s.category === category);
 
                 filteredServices.forEach(service => {
-                    // Список услуг
-                    const serviceCard = document.createElement('div');
-                    serviceCard.className = 'service-card bg-primary-50 p-4 rounded-lg border border-primary-200 transition cursor-pointer hover:border-primary-400';
-                    serviceCard.dataset.service = service.name;
-                    serviceCard.dataset.price = service.price;
-                    serviceCard.dataset.duration = service.duration;
-                    serviceCard.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-primary-800">${service.name}</h3>
-                            <span class="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm font-medium">${service.price}₽</span>
-                        </div>
-                        <div class="text-sm text-primary-600 mt-1">${service.category} • ${service.duration} мин</div>
-                    `;
-                    servicesList.appendChild(serviceCard);
-
                     // Чекбоксы для формы
                     const checkboxDiv = document.createElement('div');
                     checkboxDiv.className = 'flex items-center';
@@ -944,12 +914,6 @@
                     checkboxDiv.appendChild(label);
                     servicesContainer.appendChild(checkboxDiv);
 
-                    // Обработчики событий
-                    serviceCard.addEventListener('click', function() {
-                        checkbox.checked = !checkbox.checked;
-                        checkbox.dispatchEvent(new Event('change'));
-                    });
-
                     label.addEventListener('click', function(e) {
                         e.preventDefault();
                         checkbox.checked = !checkbox.checked;
@@ -957,7 +921,7 @@
                     });
 
                     checkbox.addEventListener('change', function() {
-                        updateServiceSelection(checkbox, serviceCard, label);
+                        updateServiceSelection(checkbox, label);
                         updateTotalPrice();
                     });
                 });
@@ -965,12 +929,10 @@
                 updateTotalPrice();
             }
 
-            function updateServiceSelection(checkbox, card, label) {
+            function updateServiceSelection(checkbox, label) {
                 if (checkbox.checked) {
-                    card.classList.add('selected-service');
                     label.classList.add('bg-primary-600', 'text-white');
                 } else {
-                    card.classList.remove('selected-service');
                     label.classList.remove('bg-primary-600', 'text-white');
                 }
             }
@@ -1260,14 +1222,6 @@
 
                 // Сбрасываем форму
                 bookingForm.reset();
-
-                document.querySelectorAll('.service-card').forEach(card => {
-                    card.classList.remove('selected-service');
-                });
-
-                document.querySelectorAll('.service-checkbox').forEach(cb => {
-                    cb.checked = false;
-                });
 
                 document.querySelectorAll('.service-label').forEach(label => {
                     label.classList.remove('bg-primary-600', 'text-white');
