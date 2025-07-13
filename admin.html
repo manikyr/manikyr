@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | Маникюр</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #8b5cf6 100%);
+        }
+
+        .neumorphic {
+            box-shadow: 8px 8px 16px #d1d5db,
+                        -8px -8px 16px #ffffff;
+            border-radius: 16px;
+        }
+
+        .neumorphic-inset {
+            box-shadow: inset 4px 4px 8px #d1d5db,
+                        inset -4px -4px 8px #ffffff;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .date-badge {
+            transition: all 0.3s ease;
+            min-width: 70px;
+        }
+
+        .date-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .page-load {
+            animation: pageLoad 1s ease-out;
+        }
+
+        @keyframes pageLoad {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+        }
+
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .password-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .password-input {
+            letter-spacing: 0.1em;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-item {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover .gallery-img {
+            transform: scale(1.05);
+        }
+
+        .ip-error {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 page-load">
+    <!-- IP Check Section -->
+    <div id="ip-check-section" class="min-h-screen flex items-center justify-center px-4 fade-in hidden">
+        <div class="password-container scroll-reveal">
+            <div class="text-center mb-8">
+                <div class="mx-auto w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-globe text-primary-700 text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-primary-800 mb-2">Проверка доступа</h1>
+                <p class="text-primary-600">Определение вашего IP-адреса...</p>
+            </div>
+            <div id="ip-error" class="ip-error hidden">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Доступ запрещен</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Извините, у вас нет прав доступа к этой панели. Доступ разрешен только с определенного IP-адреса.</p>
+                            <p class="mt-2 font-semibold">Ваш IP: <span id="user-ip"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="ip-success" class="hidden">
+                <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                <span class="font-semibold">Доступ разрешен!</span> Ваш IP-адрес соответствует требованиям.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <button id="continue-btn" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-md">
+                    <i class="fas fa-arrow-right mr-2"></i> Продолжить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Section -->
+    <div id="password-section" class="min-h-screen flex items-center justify-center px-4 fade-in hidden">
+        <div class="password-container scroll-reveal">
+            <div class="text-center mb-8">
+                <div class="mx-auto w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-lock text-primary-700 text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-primary-800 mb-2">Доступ к админ-панели</h1>
+                <p class="text-primary-600">Введите пароль администратора</p>
+            </div>
+            <div class="mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-key text-primary-400"></i>
+                    </div>
+                    <input type="password" id="admin-password" class="password-input w-full pl-10 pr-4 py-3 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Введите пароль">
+                </div>
+                <p id="password-error" class="text-red-500 mt-2 text-sm hidden">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Неверный пароль
+                </p>
+            </div>
+            <button id="submit-password" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-md">
+                <i class="fas fa-sign-in-alt mr-2"></i> Войти
+            </button>
+            <div class="mt-6 text-center text-sm text-primary-500">
+                <p>Если вы забыли пароль, обратитесь к администратору.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Booking Modal -->
+    <div id="update-booking-modal" class="modal">
+        <div class="modal-content neumorphic">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary-800">Обновить запись</h2>
+                <button id="close-modal-btn" class="text-primary-600 hover:text-primary-800">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="update-booking-form">
+                <input type="hidden" id="update-booking-id">
+                <div class="mb-4">
+                    <label for="update-name" class="block text-primary-700 mb-2 font-medium">Имя</label>
+                    <input type="text" id="update-name" class="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="update-phone" class="block text-primary-700 mb-2 font-medium">Телефон</label>
+                    <input type="tel" id="update-phone" class="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="update-date" class="block text-primary-700 mb-2 font-medium">Дата</label>
+                    <select id="update-date" class="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500" required></select>
+                </div>
+                <div class="mb-4">
+                    <label for="update-time" class="block text-primary-700 mb-2 font-medium">Время</label>
+                    <select id="update-time" class="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500" required></select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-primary-700 mb-2 font-medium">Услуги</label>
+                    <div id="update-services" class="space-y-2"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="update-notes" class="block text-primary-700 mb-2 font-medium">Комментарии</label>
+                    <textarea id="update-notes" class="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500" rows="4"></textarea>
+                </div>
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-md">
+                    <i class="fas fa-save mr-2"></i> Сохранить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel (hidden initially) -->
+    <div id="admin-panel" class="hidden fade-in min-h-screen">
+        <header class="gradient-bg text-white shadow-lg">
+            <div class="container mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-user-shield text-3xl"></i>
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold">Панель администратора</h1>
+                            <p class="text-sm text-primary-200">Маникюр</p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="bg-white text-primary-800 px-4 py-2 rounded-full font-semibold hover:bg-primary-100 transition flex items-center">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Выйти
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="container mx-auto px-4 py-8">
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="stats-card">
+                    <div class="text-4xl font-bold mb-2" id="total-bookings">0</div>
+                    <p>Всего записей</p>
+                </div>
+                <div class="stats-card">
+                    <div class="text-4xl font-bold mb-2" id="new-bookings">0</div>
+                    <p>Новых записей</p>
+                </div>
+                <div class="stats-card">
+                    <div class="text-4xl font-bold mb-2" id="revenue">0₽</div>
+                    <p>Ожидаемый доход</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-xl p-6 mb-8 neumorphic">
+                <div class="flex items-center mb-6">
+                    <div class="bg-primary-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-calendar-alt text-primary-700"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-primary-800">Управление доступными датами</h2>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex-grow">
+                        <label for="new-date" class="block text-primary-700 mb-2 font-medium">Добавить дату</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-calendar text-primary-400"></i>
+                            </div>
+                            <input type="date" id="new-date" class="w-full pl-10 pr-4 py-2.5 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                    </div>
+                    <button id="add-date-btn" class="px-5 py-2.5 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition shadow-md whitespace-nowrap flex items-center">
+                        <i class="fas fa-plus mr-2"></i>Добавить
+                    </button>
+                </div>
+                <div id="dates-list" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-xl p-6 neumorphic">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="bg-primary-100 p-3 rounded-full mr-4">
+                            <i class="fas fa-users text-primary-700"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-primary-800">Записи клиентов</h2>
+                    </div>
+                    <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
+                        <div class="relative w-full md:w-auto">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-primary-400"></i>
+                            </div>
+                            <input type="text" id="search-bookings" class="w-full pl-10 pr-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Поиск по имени или телефону">
+                        </div>
+                        <button id="export-csv" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition flex items-center">
+                            <i class="fas fa-download mr-2"></i>Экспорт CSV
+                        </button>
+                        <button id="filter-new" class="px-4 py-2 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition flex items-center">
+                            <i class="fas fa-sort-amount-up mr-2"></i>Новые
+                        </button>
+                        <button id="filter-old" class="px-4 py-2 bg-primary-100 text-primary-800 rounded-lg font-semibold hover:bg-primary-200 transition flex items-center">
+                            <i class="fas fa-sort-amount-down mr-2"></i>Старые
+                        </button>
+                    </div>
+                </div>
+                <div id="bookings-list" class="space-y-4"></div>
+            </div>
+        </main>
+        <footer class="bg-primary-900 text-white py-6 mt-12">
+            <div class="container mx-auto px-4 text-center">
+                <p class="text-primary-200 text-sm">Административная панель Маникюр • © 2025</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Разрешенный IP-адрес
+        const ALLOWED_IP = "185.13.132.135";
+        // Пароль администратора
+        const ADMIN_PASSWORD = "admin123";
+
+        // Данные об услугах с категориями и длительностью
+        const servicesData = [
+            { name: "Комбинированный маникюр", price: 700, category: "Маникюр", duration: 60 },
+            { name: "Дизайн", price: 100, category: "Дизайн", duration: 30 },
+            { name: "Френч, Омбре", price: 200, category: "Дизайн", duration: 30 },
+            { name: "Коррекция наращивания", price: 1200, category: "Маникюр", duration: 90 },
+            { name: "Ремонт/Наращивание одного ногтя", price: 50, category: "Маникюр", duration: 15 },
+            { name: "Снятие", price: 0, category: "Маникюр", duration: 20 },
+            { name: "Снятие без покрытия", price: 200, category: "Маникюр", duration: 30 },
+            { name: "Обработка пальчиков", price: 800, category: "Педикюр", duration: 45 },
+            { name: "Обработка пальчиков с покрытием", price: 1000, category: "Педикюр", duration: 60 },
+            { name: "Педикюр с обработкой стопы", price: 1300, category: "Педикюр", duration: 90 },
+            { name: "Педикюр с покрытием", price: 1500, category: "Педикюр", duration: 90 },
+            { name: "Маникюр с укреплением и покрытием", price: 1200, category: "Маникюр", duration: 90 },
+            { name: "Наращивание", price: 1500, category: "Маникюр", duration: 120 }
+        ];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Сначала проверяем IP
+            checkIP();
+
+            // Обработчик входа
+            document.getElementById('submit-password').addEventListener('click', function() {
+                const enteredPassword = document.getElementById('admin-password').value;
+                if (enteredPassword === ADMIN_PASSWORD) {
+                    document.getElementById('password-section').style.display = 'none';
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    loadAdminStats();
+                    loadAdminBookings('new');
+                    loadAdminDates();
+                } else {
+                    document.getElementById('password-error').classList.remove('hidden');
+                    document.getElementById('admin-password').classList.add('shake');
+                    setTimeout(() => {
+                        document.getElementById('admin-password').classList.remove('shake');
+                    }, 500);
+                    document.getElementById('admin-password').focus();
+                }
+            });
+
+            // Обработчик Enter в поле пароля
+            document.getElementById('admin-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('submit-password').click();
+                }
+            });
+
+            // Обработчик выхода
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                document.getElementById('admin-panel').classList.add('hidden');
+                document.getElementById('password-section').style.display = 'flex';
+                document.getElementById('admin-password').value = '';
+                document.getElementById('password-error').classList.add('hidden');
+            });
+
+            // Обработчик добавления даты
+            document.getElementById('add-date-btn').addEventListener('click', function() {
+                const newDateInput = document.getElementById('new-date');
+                const newDate = newDateInput.value;
+                if (!newDate) {
+                    alert('Пожалуйста, выберите дату');
+                    return;
+                }
+                const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+                const dateExists = availableDates.some(d => d.date === newDate);
+                if (!dateExists) {
+                    availableDates.push({
+                        date: newDate,
+                        times: []
+                    });
+                    availableDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    localStorage.setItem('availableDates', JSON.stringify(availableDates));
+                    loadAdminDates();
+                    newDateInput.value = '';
+                } else {
+                    alert('Эта дата уже добавлена');
+                }
+            });
+
+            // Обработчик Enter в поле даты
+            document.getElementById('new-date').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('add-date-btn').click();
+                }
+            });
+
+            // Фильтрация записей
+            document.getElementById('filter-new').addEventListener('click', function() {
+                loadAdminBookings('new');
+                this.classList.add('gradient-bg', 'text-white');
+                this.classList.remove('bg-primary-100', 'text-primary-800');
+                document.getElementById('filter-old').classList.add('bg-primary-100', 'text-primary-800');
+                document.getElementById('filter-old').classList.remove('gradient-bg', 'text-white');
+            });
+
+            document.getElementById('filter-old').addEventListener('click', function() {
+                loadAdminBookings('old');
+                this.classList.add('gradient-bg', 'text-white');
+                this.classList.remove('bg-primary-100', 'text-primary-800');
+                document.getElementById('filter-new').classList.add('bg-primary-100', 'text-primary-800');
+                document.getElementById('filter-new').classList.remove('gradient-bg', 'text-white');
+            });
+
+            // Поиск записей
+            document.getElementById('search-bookings').addEventListener('input', function() {
+                loadAdminBookings(
+                    document.getElementById('filter-new').classList.contains('gradient-bg') ? 'new' : 'old',
+                    this.value
+                );
+            });
+
+            // Экспорт в CSV
+            document.getElementById('export-csv').addEventListener('click', function() {
+                const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+                let csv = 'ID,Имя,Телефон,Дата,Время,Услуги,Комментарии,Статус,Время создания\n';
+                bookings.forEach(booking => {
+                    const date = booking.date.split('-').reverse().join('.');
+                    const services = booking.services.map(s => s.replace(/"/g, '""')).join('; ');
+                    const notes = booking.notes ? booking.notes.replace(/"/g, '""').replace(/\n/g, ' ') : '';
+                    csv += `"${booking.id}","${booking.name.replace(/"/g, '""')}","${booking.phone.replace(/"/g, '""')}","${date}","${booking.time}","${services}","${notes}","${booking.status}","${new Date(booking.timestamp).toLocaleString('ru-RU')}"\n`;
+                });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'bookings.csv';
+                link.click();
+            });
+
+            // Обработчик кнопки продолжения после проверки IP
+            document.getElementById('continue-btn').addEventListener('click', function() {
+                document.getElementById('ip-check-section').style.display = 'none';
+                document.getElementById('password-section').classList.remove('hidden');
+            });
+
+            // Обработчик закрытия модального окна
+            document.getElementById('close-modal-btn').addEventListener('click', function() {
+                document.getElementById('update-booking-modal').style.display = 'none';
+            });
+
+            // Обработчик отправки формы обновления
+            document.getElementById('update-booking-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const bookingId = parseInt(document.getElementById('update-booking-id').value);
+                const updatedBooking = {
+                    id: bookingId,
+                    name: document.getElementById('update-name').value,
+                    phone: document.getElementById('update-phone').value,
+                    date: document.getElementById('update-date').value,
+                    time: document.getElementById('update-time').value,
+                    services: Array.from(document.querySelectorAll('#update-services input:checked')).map(input => input.value),
+                    notes: document.getElementById('update-notes').value,
+                    status: 'Новая', // Reset to new status on update, admin can change it manually
+                    timestamp: new Date().toISOString()
+                };
+                const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+                const index = bookings.findIndex(b => b.id === bookingId);
+                if (index !== -1) {
+                    bookings[index] = updatedBooking;
+                    localStorage.setItem('bookings', JSON.stringify(bookings));
+                    document.getElementById('update-booking-modal').style.display = 'none';
+                    loadAdminBookings(document.getElementById('filter-new').classList.contains('gradient-bg') ? 'new' : 'old');
+                    loadAdminStats();
+                }
+            });
+
+            // Scroll reveal animation
+            const scrollElements = document.querySelectorAll('.scroll-reveal');
+            const revealOnScroll = () => {
+                scrollElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    if (elementTop < windowHeight - 100) {
+                        element.classList.add('visible');
+                    }
+                });
+            };
+
+            window.addEventListener('scroll', revealOnScroll);
+            revealOnScroll();
+        });
+
+        // Функция проверки IP
+        function checkIP() {
+            document.getElementById('ip-check-section').classList.remove('hidden');
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const userIP = data.ip;
+                    document.getElementById('user-ip').textContent = userIP;
+                    if (userIP === ALLOWED_IP) {
+                        document.getElementById('ip-success').classList.remove('hidden');
+                        document.getElementById('ip-error').classList.add('hidden');
+                    } else {
+                        document.getElementById('ip-error').classList.remove('hidden');
+                        document.getElementById('ip-success').classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении IP:', error);
+                    document.getElementById('ip-check-section').style.display = 'none';
+                    document.getElementById('password-section').classList.remove('hidden');
+                });
+        }
+
+        // Загрузка статистики
+        function loadAdminStats() {
+            const bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            const newBookings = bookings.filter(b => b.status === 'Новая').length;
+            let totalRevenue = 0;
+            bookings.forEach(booking => {
+                booking.services.forEach(serviceName => {
+                    const service = servicesData.find(s => s.name === serviceName);
+                    if (service) {
+                        totalRevenue += service.price;
+                    }
+                });
+            });
+            document.getElementById('total-bookings').textContent = bookings.length;
+            document.getElementById('new-bookings').textContent = newBookings;
+            document.getElementById('revenue').textContent = totalRevenue + '₽';
+        }
+
+        // Загрузка записей
+        function loadAdminBookings(order = 'new', searchQuery = '') {
+            const bookingsList = document.getElementById('bookings-list');
+            bookingsList.innerHTML = '';
+            let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+            if (searchQuery) {
+                bookings = bookings.filter(booking =>
+                    booking.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    booking.phone.includes(searchQuery)
+                );
+            }
+            bookings.sort((a, b) => order === 'new' ?
+                new Date(b.timestamp) - new Date(a.timestamp) :
+                new Date(a.timestamp) - new Date(b.timestamp));
+            if (bookings.length === 0) {
+                bookingsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar-times text-4xl text-primary-300 mb-4"></i>
+                        <p class="text-gray-500">Нет записей</p>
+                    </div>
+                `;
+                return;
+            }
+            bookings.forEach(booking => {
+                const bookingDiv = document.createElement('div');
+                bookingDiv.className = 'booking-card border border-primary-200 rounded-lg p-5 hover:shadow-md transition bg-white';
+                const date = new Date(booking.timestamp).toLocaleString('ru-RU');
+                const bookingDate = booking.date.split('-').reverse().join('.');
+                let servicesList = '';
+                let totalPrice = 0;
+                let totalDuration = 0;
+                if (booking.services.length > 0) {
+                    servicesList = '<div class="mt-3"><span class="font-semibold text-primary-700">Услуги:</span><ul class="list-disc list-inside ml-2 text-sm">' +
+                        booking.services.map(service => {
+                            const serviceData = servicesData.find(s => s.name === service);
+                            const priceDuration = serviceData ? `${serviceData.price}₽ • ${serviceData.duration} мин` : 'Неизвестная услуга';
+                            if (serviceData) {
+                                totalPrice += serviceData.price;
+                                totalDuration += serviceData.duration;
+                            }
+                            return `<li>${service} (${priceDuration})</li>`;
+                        }).join('') +
+                        '</ul></div>';
+                }
+                const notesSection = booking.notes ? `
+                    <div class="mt-3">
+                        <span class="font-semibold text-primary-700">Комментарии:</span>
+                        <p class="text-sm text-gray-600">${booking.notes}</p>
+                    </div>
+                ` : '';
+                bookingDiv.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-lg text-primary-800">${booking.name}</h3>
+                            <p class="text-primary-600 mt-1"><i class="fas fa-phone-alt mr-2"></i>${booking.phone}</p>
+                            <p class="text-primary-600 mt-1"><i class="far fa-calendar-alt mr-2"></i>${bookingDate} в ${booking.time}</p>
+                            ${servicesList}
+                            ${notesSection}
+                            <div class="mt-3 text-sm text-primary-600">
+                                <span class="font-semibold">Итого: ${totalPrice}₽ • ${totalDuration} мин</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs text-gray-500">${date}</span>
+                            <select class="status-select mt-3 px-3 py-1 rounded-lg text-sm font-medium" data-id="${booking.id}">
+                                <option value="Новая" ${booking.status === 'Новая' ? 'selected' : ''}>Новая</option>
+                                <option value="Подтверждена" ${booking.status === 'Подтверждена' ? 'selected' : ''}>Подтверждена</option>
+                                <option value="Отменена" ${booking.status === 'Отменена' ? 'selected' : ''}>Отменена</option>
+                                <option value="Завершена" ${booking.status === 'Завершена' ? 'selected' : ''}>Завершена</option>
+                            </select>
+                            <button class="update-booking-btn mt-2 text-blue-500 hover:text-blue-700" data-id="${booking.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-booking-btn mt-2 text-red-500 hover:text-red-700" data-id="${booking.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                bookingsList.appendChild(bookingDiv);
+            });
+
+            // Обработчики изменения статуса
+            document.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const bookingId = parseInt(this.dataset.id);
+                    const bookings = JSON.parse(localStorage.getItem('bookings'));
+                    const booking = bookings.find(b => b.id === bookingId);
+                    if (booking) {
+                        booking.status = this.value;
+                        localStorage.setItem('bookings', JSON.stringify(bookings));
+                        if (this.value === 'Подтверждена') {
+                            // Add notification for client
+                            const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+                            notifications.push({
+                                phone: booking.phone,
+                                message: `Ваша запись на ${booking.date.split('-').reverse().join('.')} в ${booking.time} подтверждена!`,
+                                timestamp: new Date().toISOString()
+                            });
+                            localStorage.setItem('notifications', JSON.stringify(notifications));
+                        }
+                        loadAdminStats();
+                    }
+                });
+            });
+
+            // Обработчики удаления записи
+            document.querySelectorAll('.delete-booking-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (confirm('Вы уверены, что хотите удалить эту запись?')) {
+                        const bookingId = parseInt(this.dataset.id);
+                        const bookings = JSON.parse(localStorage.getItem('bookings'));
+                        const updatedBookings = bookings.filter(b => b.id !== bookingId);
+                        localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+                        loadAdminBookings(document.getElementById('filter-new').classList.contains('gradient-bg') ? 'new' : 'old');
+                        loadAdminStats();
+                    }
+                });
+            });
+
+            // Обработчики обновления записи
+            document.querySelectorAll('.update-booking-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookingId = parseInt(this.dataset.id);
+                    const bookings = JSON.parse(localStorage.getItem('bookings'));
+                    const booking = bookings.find(b => b.id === bookingId);
+                    if (booking) {
+                        // Populate modal form
+                        document.getElementById('update-booking-id').value = booking.id;
+                        document.getElementById('update-name').value = booking.name;
+                        document.getElementById('update-phone').value = booking.phone;
+                        document.getElementById('update-notes').value = booking.notes || '';
+
+                        // Populate date dropdown
+                        const dateSelect = document.getElementById('update-date');
+                        dateSelect.innerHTML = '';
+                        const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+                        availableDates.forEach(dateObj => {
+                            const option = document.createElement('option');
+                            option.value = dateObj.date;
+                            option.textContent = dateObj.date.split('-').reverse().join('.');
+                            if (dateObj.date === booking.date) {
+                                option.selected = true;
+                            }
+                            dateSelect.appendChild(option);
+                        });
+
+                        // Populate time dropdown based on selected date
+                        const timeSelect = document.getElementById('update-time');
+                        const updateTimes = () => {
+                            timeSelect.innerHTML = '';
+                            const selectedDate = dateSelect.value;
+                            const dateObj = availableDates.find(d => d.date === selectedDate);
+                            if (dateObj) {
+                                dateObj.times.forEach(time => {
+                                    const option = document.createElement('option');
+                                    option.value = time;
+                                    option.textContent = time;
+                                    if (time === booking.time && selectedDate === booking.date) {
+                                        option.selected = true;
+                                    }
+                                    timeSelect.appendChild(option);
+                                });
+                            }
+                        };
+                        updateTimes();
+                        dateSelect.addEventListener('change', updateTimes);
+
+                        // Populate services checkboxes
+                        const servicesContainer = document.getElementById('update-services');
+                        servicesContainer.innerHTML = '';
+                        servicesData.forEach(service => {
+                            const div = document.createElement('div');
+                            div.className = 'flex items-center';
+                            div.innerHTML = `
+                                <input type="checkbox" id="service-${service.name}" value="${service.name}" class="mr-2" ${booking.services.includes(service.name) ? 'checked' : ''}>
+                                <label for="service-${service.name}">${service.name} (${service.price}₽, ${service.duration} мин)</label>
+                            `;
+                            servicesContainer.appendChild(div);
+                        });
+
+                        // Show modal
+                        document.getElementById('update-booking-modal').style.display = 'flex';
+                    }
+                });
+            });
+        }
+
+        // Загрузка дат
+        function loadAdminDates() {
+            const datesList = document.getElementById('dates-list');
+            datesList.innerHTML = '';
+            const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+            if (availableDates.length === 0) {
+                datesList.innerHTML = `
+                    <div class="text-center py-8 col-span-3">
+                        <i class="fas fa-calendar-plus text-4xl text-primary-300 mb-4"></i>
+                        <p class="text-gray-500">Нет доступных дат</p>
+                    </div>
+                `;
+                return;
+            }
+            availableDates.forEach(dateObj => {
+                const dateStr = dateObj.date;
+                const dateParts = dateStr.split('-');
+                const displayDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+                const dateCard = document.createElement('div');
+                dateCard.className = 'bg-primary-50 rounded-lg p-4 flex flex-col';
+                dateCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="font-bold text-lg text-primary-800">${displayDate}</div>
+                        <button class="delete-date-btn text-red-500 hover:text-red-700" data-date="${dateStr}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex items-center mb-2">
+                            <i class="far fa-clock text-primary-500 mr-2"></i>
+                            <span class="text-sm font-medium text-primary-700">Доступные времена:</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${dateObj.times.map(time => `
+                                <div class="relative group">
+                                    <span class="bg-white px-2 py-1 rounded text-sm text-primary-700">${time}</span>
+                                    <button class="delete-time-btn absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100" data-date="${dateStr}" data-time="${time}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="mt-4 flex">
+                        <input type="text" class="add-time-input flex-grow border border-primary-300 rounded-l-lg px-3 py-1 text-sm" placeholder="Новое время">
+                        <button class="add-time-btn bg-primary-600 text-white px-3 rounded-r-lg text-sm" data-date="${dateStr}">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                `;
+                datesList.appendChild(dateCard);
+            });
+
+            // Обработчики удаления даты
+            document.querySelectorAll('.delete-date-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const dateToDelete = this.dataset.date;
+                    const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+                    const updatedDates = availableDates.filter(d => d.date !== dateToDelete);
+                    localStorage.setItem('availableDates', JSON.stringify(updatedDates));
+                    loadAdminDates();
+                });
+            });
+
+            // Обработчики удаления времени
+            document.querySelectorAll('.delete-time-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const date = this.dataset.date;
+                    const time = this.dataset.time;
+                    const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+                    const dateIndex = availableDates.findIndex(d => d.date === date);
+                    if (dateIndex !== -1) {
+                        const updatedTimes = availableDates[dateIndex].times.filter(t => t !== time);
+                        availableDates[dateIndex].times = updatedTimes;
+                        localStorage.setItem('availableDates', JSON.stringify(availableDates));
+                        loadAdminDates();
+                    }
+                });
+            });
+
+            // Обработчики добавления времени
+            document.querySelectorAll('.add-time-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const date = this.dataset.date;
+                    const input = this.previousElementSibling;
+                    const newTime = input.value.trim();
+                    if (!newTime) {
+                        alert('Пожалуйста, введите время');
+                        return;
+                    }
+                    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(newTime)) {
+                        alert('Пожалуйста, введите время в формате ЧЧ:ММ (например, 10:30)');
+                        return;
+                    }
+                    const availableDates = JSON.parse(localStorage.getItem('availableDates')) || [];
+                    const dateIndex = availableDates.findIndex(d => d.date === date);
+                    if (dateIndex !== -1) {
+                        if (!availableDates[dateIndex].times.includes(newTime)) {
+                            availableDates[dateIndex].times.push(newTime);
+                            availableDates[dateIndex].times.sort();
+                            localStorage.setItem('availableDates', JSON.stringify(availableDates));
+                            loadAdminDates();
+                            input.value = '';
+                        } else {
+                            alert('Это время уже добавлено');
+                        }
+                    }
+                });
+            });
+
+            // Обработчик Enter в поле времени
+            document.querySelectorAll('.add-time-input').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const btn = this.nextElementSibling;
+                        btn.click();
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
